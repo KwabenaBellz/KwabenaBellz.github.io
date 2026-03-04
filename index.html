@@ -1,0 +1,1160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Olaoluwa Emmanuel Bello — EKG Empire</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --black: #050608;
+    --dark: #0a0c10;
+    --card: #0f1218;
+    --border: #1a1f2e;
+    --green: #00ff88;
+    --green-dim: #00ff8833;
+    --green-glow: #00ff8815;
+    --gold: #ffd700;
+    --gold-dim: #ffd70022;
+    --blue: #4fc3f7;
+    --text: #e8eaf0;
+    --muted: #6b7280;
+    --mono: 'Space Mono', monospace;
+    --display: 'Syne', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--black);
+    color: var(--text);
+    font-family: var(--mono);
+    overflow-x: hidden;
+    cursor: none;
+  }
+
+  /* Custom cursor */
+  .cursor {
+    width: 8px; height: 8px;
+    background: var(--green);
+    border-radius: 50%;
+    position: fixed;
+    pointer-events: none;
+    z-index: 9999;
+    transition: transform 0.1s ease;
+    box-shadow: 0 0 12px var(--green), 0 0 24px var(--green);
+  }
+  .cursor-ring {
+    width: 32px; height: 32px;
+    border: 1px solid var(--green);
+    border-radius: 50%;
+    position: fixed;
+    pointer-events: none;
+    z-index: 9998;
+    transition: all 0.15s ease;
+    opacity: 0.4;
+  }
+
+  /* Grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,255,136,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,255,136,0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Scanline effect */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.08) 2px,
+      rgba(0,0,0,0.08) 4px
+    );
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    padding: 20px 48px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border);
+    background: rgba(5,6,8,0.85);
+    backdrop-filter: blur(20px);
+  }
+
+  .nav-logo {
+    font-family: var(--display);
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--green);
+    letter-spacing: 0.1em;
+    text-decoration: none;
+  }
+
+  .nav-links {
+    display: flex;
+    gap: 32px;
+    list-style: none;
+  }
+
+  .nav-links a {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 0.75rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    transition: color 0.2s;
+  }
+
+  .nav-links a:hover { color: var(--green); }
+
+  .nav-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.7rem;
+    color: var(--green);
+    letter-spacing: 0.1em;
+  }
+
+  .status-dot {
+    width: 6px; height: 6px;
+    background: var(--green);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(0,255,136,0.4); }
+    50% { opacity: 0.8; box-shadow: 0 0 0 6px rgba(0,255,136,0); }
+  }
+
+  /* SECTIONS */
+  section {
+    position: relative;
+    z-index: 2;
+    padding: 120px 48px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  /* HERO */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding-top: 100px;
+    max-width: 100%;
+    padding-left: 48px;
+    padding-right: 48px;
+  }
+
+  .hero-eyebrow {
+    font-size: 0.7rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--green);
+    margin-bottom: 24px;
+    opacity: 0;
+    animation: fadeUp 0.8s ease 0.2s forwards;
+  }
+
+  .hero-name {
+    font-family: var(--display);
+    font-size: clamp(3rem, 8vw, 7rem);
+    font-weight: 800;
+    line-height: 0.95;
+    letter-spacing: -0.02em;
+    margin-bottom: 16px;
+    opacity: 0;
+    animation: fadeUp 0.8s ease 0.4s forwards;
+  }
+
+  .hero-name .accent { color: var(--green); }
+
+  .hero-title {
+    font-family: var(--display);
+    font-size: clamp(1rem, 3vw, 1.8rem);
+    font-weight: 400;
+    color: var(--muted);
+    margin-bottom: 40px;
+    opacity: 0;
+    animation: fadeUp 0.8s ease 0.6s forwards;
+  }
+
+  .hero-tagline {
+    font-size: 0.85rem;
+    line-height: 1.8;
+    color: var(--text);
+    max-width: 600px;
+    margin-bottom: 48px;
+    opacity: 0;
+    animation: fadeUp 0.8s ease 0.8s forwards;
+    border-left: 2px solid var(--green);
+    padding-left: 20px;
+  }
+
+  .hero-stats {
+    display: flex;
+    gap: 48px;
+    margin-bottom: 48px;
+    opacity: 0;
+    animation: fadeUp 0.8s ease 1s forwards;
+    flex-wrap: wrap;
+  }
+
+  .stat {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .stat-value {
+    font-family: var(--display);
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--green);
+  }
+
+  .stat-label {
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .hero-cta {
+    display: flex;
+    gap: 16px;
+    opacity: 0;
+    animation: fadeUp 0.8s ease 1.2s forwards;
+    flex-wrap: wrap;
+  }
+
+  .btn-primary {
+    padding: 14px 32px;
+    background: var(--green);
+    color: var(--black);
+    text-decoration: none;
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    transition: all 0.2s;
+    clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+  }
+
+  .btn-primary:hover {
+    background: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(0,255,136,0.3);
+  }
+
+  .btn-secondary {
+    padding: 14px 32px;
+    border: 1px solid var(--border);
+    color: var(--text);
+    text-decoration: none;
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    transition: all 0.2s;
+  }
+
+  .btn-secondary:hover {
+    border-color: var(--green);
+    color: var(--green);
+  }
+
+  /* Floating terminal */
+  .hero-terminal {
+    position: absolute;
+    right: 48px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 380px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    opacity: 0;
+    animation: fadeLeft 1s ease 1.4s forwards;
+  }
+
+  .terminal-header {
+    padding: 12px 16px;
+    background: var(--dark);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .terminal-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+  }
+
+  .terminal-body {
+    padding: 20px;
+    font-size: 0.72rem;
+    line-height: 2;
+  }
+
+  .t-green { color: var(--green); }
+  .t-blue { color: var(--blue); }
+  .t-gold { color: var(--gold); }
+  .t-muted { color: var(--muted); }
+
+  .blink {
+    animation: blink 1s step-end infinite;
+  }
+
+  @keyframes blink { 50% { opacity: 0; } }
+
+  /* SECTION HEADERS */
+  .section-header {
+    margin-bottom: 64px;
+  }
+
+  .section-eyebrow {
+    font-size: 0.65rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--green);
+    margin-bottom: 12px;
+  }
+
+  .section-title {
+    font-family: var(--display);
+    font-size: clamp(2rem, 4vw, 3.5rem);
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.02em;
+  }
+
+  /* ABOUT */
+  .about-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 64px;
+    align-items: start;
+  }
+
+  .about-text p {
+    font-size: 0.85rem;
+    line-height: 2;
+    color: var(--muted);
+    margin-bottom: 20px;
+  }
+
+  .about-text p strong { color: var(--text); }
+
+  .ekg-meaning {
+    background: var(--card);
+    border: 1px solid var(--border);
+    padding: 32px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .ekg-meaning::before {
+    content: 'EKG';
+    position: absolute;
+    top: -20px; right: -10px;
+    font-family: var(--display);
+    font-size: 6rem;
+    font-weight: 800;
+    color: var(--green-dim);
+    pointer-events: none;
+  }
+
+  .ekg-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .ekg-row:last-child { border-bottom: none; }
+
+  .ekg-letter {
+    font-family: var(--display);
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: var(--green);
+    width: 48px;
+    flex-shrink: 0;
+    line-height: 1;
+  }
+
+  .ekg-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .ekg-name {
+    font-family: var(--display);
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .ekg-desc {
+    font-size: 0.72rem;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  /* PROJECTS */
+  .projects-grid {
+    display: grid;
+    gap: 24px;
+  }
+
+  .project-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    padding: 40px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.3s, transform 0.3s;
+  }
+
+  .project-card:hover {
+    border-color: var(--green);
+    transform: translateY(-4px);
+  }
+
+  .project-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--green), transparent);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .project-card:hover::before { opacity: 1; }
+
+  .project-card.featured {
+    border-color: rgba(0,255,136,0.2);
+    background: linear-gradient(135deg, var(--card), rgba(0,255,136,0.03));
+  }
+
+  .project-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .project-title {
+    font-family: var(--display);
+    font-size: 1.5rem;
+    font-weight: 800;
+    line-height: 1.2;
+  }
+
+  .project-badge {
+    padding: 4px 12px;
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    border-radius: 2px;
+    font-weight: 700;
+  }
+
+  .badge-live {
+    background: rgba(0,255,136,0.15);
+    color: var(--green);
+    border: 1px solid rgba(0,255,136,0.3);
+  }
+
+  .badge-dev {
+    background: rgba(79,195,247,0.15);
+    color: var(--blue);
+    border: 1px solid rgba(79,195,247,0.3);
+  }
+
+  .project-desc {
+    font-size: 0.8rem;
+    line-height: 1.8;
+    color: var(--muted);
+    margin-bottom: 28px;
+  }
+
+  .metrics-row {
+    display: flex;
+    gap: 32px;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+  }
+
+  .metric {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .metric-value {
+    font-family: var(--display);
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--green);
+  }
+
+  .metric-label {
+    font-size: 0.62rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .tech-stack {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .tech-tag {
+    padding: 4px 10px;
+    background: var(--dark);
+    border: 1px solid var(--border);
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    transition: all 0.2s;
+  }
+
+  .tech-tag:hover {
+    border-color: var(--green);
+    color: var(--green);
+  }
+
+  /* Architecture visualization */
+  .arch-visual {
+    margin: 28px 0;
+    padding: 20px;
+    background: var(--dark);
+    border: 1px solid var(--border);
+    font-size: 0.68rem;
+    line-height: 1.8;
+    overflow-x: auto;
+  }
+
+  /* ROADMAP */
+  .roadmap {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    margin-top: 48px;
+  }
+
+  .roadmap-item {
+    padding: 24px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    transition: border-color 0.2s;
+  }
+
+  .roadmap-item:hover { border-color: var(--green); }
+
+  .roadmap-icon {
+    font-size: 1.2rem;
+    flex-shrink: 0;
+  }
+
+  .roadmap-text {
+    font-size: 0.75rem;
+    line-height: 1.6;
+    color: var(--muted);
+  }
+
+  .roadmap-text strong {
+    display: block;
+    color: var(--text);
+    margin-bottom: 4px;
+    font-family: var(--display);
+  }
+
+  /* CONTACT */
+  .contact-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 64px;
+    align-items: center;
+  }
+
+  .contact-text p {
+    font-size: 0.85rem;
+    line-height: 2;
+    color: var(--muted);
+    margin-bottom: 32px;
+  }
+
+  .contact-links {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .contact-link {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 20px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    text-decoration: none;
+    color: var(--text);
+    font-size: 0.78rem;
+    transition: all 0.2s;
+    letter-spacing: 0.05em;
+  }
+
+  .contact-link:hover {
+    border-color: var(--green);
+    color: var(--green);
+    transform: translateX(8px);
+  }
+
+  .contact-link-icon {
+    font-size: 1.1rem;
+    width: 24px;
+    text-align: center;
+  }
+
+  /* Quote block */
+  .quote-block {
+    padding: 48px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--green);
+    position: relative;
+  }
+
+  .quote-text {
+    font-family: var(--display);
+    font-size: 1.4rem;
+    font-weight: 600;
+    line-height: 1.5;
+    color: var(--text);
+    margin-bottom: 16px;
+  }
+
+  .quote-attr {
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  /* FOOTER */
+  footer {
+    position: relative;
+    z-index: 2;
+    padding: 32px 48px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.7rem;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+  }
+
+  .footer-name {
+    color: var(--green);
+    font-family: var(--display);
+    font-weight: 700;
+  }
+
+  /* ANIMATIONS */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeLeft {
+    from { opacity: 0; transform: translate(24px, -50%); }
+    to { opacity: 1; transform: translate(0, -50%); }
+  }
+
+  .reveal {
+    opacity: 0;
+    transform: translateY(32px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* RESPONSIVE */
+  @media (max-width: 900px) {
+    nav { padding: 16px 24px; }
+    .nav-links { display: none; }
+    section { padding: 80px 24px; }
+    .hero { padding: 100px 24px 60px; }
+    .hero-terminal { display: none; }
+    .about-grid { grid-template-columns: 1fr; gap: 40px; }
+    .contact-grid { grid-template-columns: 1fr; gap: 40px; }
+    footer { flex-direction: column; gap: 8px; text-align: center; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Cursor -->
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo">KwabenaBellz</a>
+  <ul class="nav-links">
+    <li><a href="#about">About</a></li>
+    <li><a href="#projects">Projects</a></li>
+    <li><a href="#roadmap">Roadmap</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+  <div class="nav-status">
+    <div class="status-dot"></div>
+    EKG Engine: Live
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero" style="position:relative;">
+  <div class="hero-eyebrow">// AI Engineer • Algorithmic Trader • Fintech Builder</div>
+  <h1 class="hero-name">
+    Olaoluwa<br>
+    <span class="accent">Emmanuel</span><br>
+    Bello
+  </h1>
+  <p class="hero-title">Building machines that fight in financial markets.</p>
+  <p class="hero-tagline">
+    Self-taught DRL engineer from Lagos, Nigeria.<br>
+    Built a live autonomous trading engine from scratch —<br>
+    no team, no funding, no excuses.
+  </p>
+  <div class="hero-stats">
+    <div class="stat">
+      <span class="stat-value">63.6%</span>
+      <span class="stat-label">Win Rate</span>
+    </div>
+    <div class="stat">
+      <span class="stat-value">+6.33%</span>
+      <span class="stat-label">Holdout Return</span>
+    </div>
+    <div class="stat">
+      <span class="stat-value">5M</span>
+      <span class="stat-label">Training Steps</span>
+    </div>
+    <div class="stat">
+      <span class="stat-value">24/7</span>
+      <span class="stat-label">Machine Active</span>
+    </div>
+  </div>
+  <div class="hero-cta">
+    <a href="#projects" class="btn-primary">View Projects</a>
+    <a href="https://github.com/KwabenaBellz" target="_blank" class="btn-secondary">GitHub ↗</a>
+    <a href="#contact" class="btn-secondary">Contact</a>
+  </div>
+
+  <!-- Terminal -->
+  <div class="hero-terminal">
+    <div class="terminal-header">
+      <div class="terminal-dot" style="background:#ff5f57"></div>
+      <div class="terminal-dot" style="background:#febc2e"></div>
+      <div class="terminal-dot" style="background:#28c840"></div>
+      <span style="font-size:0.65rem;color:var(--muted);margin-left:8px;">ekg_empire — shadow_bot_v4.py</span>
+    </div>
+    <div class="terminal-body">
+      <div><span class="t-muted">$</span> <span class="t-green">python live_shadow_bot_v4.py</span></div>
+      <div class="t-muted">Loading V4.1 brain... ✓</div>
+      <div class="t-muted">Observation space: (11,) ✓</div>
+      <div class="t-muted">Telegram: active ✓</div>
+      <div style="margin-top:8px;">
+        <span class="t-green">[14:15:06]</span>
+        <span class="t-muted"> V75: </span>
+        <span class="t-gold">35908.94</span>
+      </div>
+      <div>
+        <span class="t-blue">SELL 0.5</span>
+        <span class="t-muted"> | SHORT 0.5</span>
+      </div>
+      <div>
+        <span class="t-muted">PnL: </span>
+        <span class="t-green">+0.024%</span>
+        <span class="t-muted"> | Bal: </span>
+        <span class="t-green">$10,001.22</span>
+      </div>
+      <div>
+        <span class="t-muted">ADX: 0.199 [</span><span class="t-gold">CHOP</span><span class="t-muted">]</span>
+      </div>
+      <div style="margin-top:8px;">
+        <span class="t-green">[14:30:21]</span>
+        <span class="t-muted"> Regime shift detected</span>
+      </div>
+      <div>
+        <span class="t-muted">ADX: 0.312 [</span><span class="t-green">TREND ↑</span><span class="t-muted">]</span>
+      </div>
+      <div>
+        <span class="t-blue">BUY 1.0</span>
+        <span class="t-muted"> | LONG 1.0</span>
+      </div>
+      <div><span class="t-green">█<span class="blink">_</span></span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ABOUT -->
+<section id="about">
+  <div class="section-header reveal">
+    <div class="section-eyebrow">// 01 — About</div>
+    <h2 class="section-title">The Story Behind<br>The Machine</h2>
+  </div>
+
+  <div class="about-grid">
+    <div class="about-text reveal">
+      <p>
+        I've always been more connected to machines than to people.
+        Before AI was a buzzword, I was building systems — trying to
+        understand how intelligence could be encoded into code.
+      </p>
+      <p>
+        Two years ago I built my first forex bot. It was rough.
+        But it started something. I kept going, kept debugging at midnight,
+        kept asking harder questions until the architecture was right.
+      </p>
+      <p>
+        <strong>EKG Empire</strong> is what happened when I refused to stop.
+        A live Deep Reinforcement Learning trading engine — custom environment,
+        custom reward shaping, regime detection, live execution.
+        Built alone. From Lagos. With no institutional backing.
+      </p>
+      <p>
+        Now I'm relocating to <strong>Canada</strong> with my wife,
+        building the portfolio that proves what's possible when
+        constraints become creative parameters.
+      </p>
+    </div>
+
+    <div class="ekg-meaning reveal">
+      <div class="ekg-row">
+        <div class="ekg-letter">E</div>
+        <div class="ekg-info">
+          <div class="ekg-name">Emmanuel & Elizabeth</div>
+          <div class="ekg-desc">My given name and my mother — the foundation of everything I am.</div>
+        </div>
+      </div>
+      <div class="ekg-row">
+        <div class="ekg-letter">K</div>
+        <div class="ekg-info">
+          <div class="ekg-name">Kwabena</div>
+          <div class="ekg-desc">My father's real name — born in Ghana. The engineering mind I inherited.</div>
+        </div>
+      </div>
+      <div class="ekg-row">
+        <div class="ekg-letter">G</div>
+        <div class="ekg-info">
+          <div class="ekg-name">Gift (Godsgift)</div>
+          <div class="ekg-desc">My wife. A gift from the universe. The reason I build with urgency.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PROJECTS -->
+<section id="projects">
+  <div class="section-header reveal">
+    <div class="section-eyebrow">// 02 — Projects</div>
+    <h2 class="section-title">What The<br>Machine Builds</h2>
+  </div>
+
+  <div class="projects-grid">
+
+    <!-- EKG Empire -->
+    <div class="project-card featured reveal">
+      <div class="project-header">
+        <div class="project-title">EKG Empire<br><span style="color:var(--muted);font-size:1rem;font-weight:400;">Sovereign DRL Trading Engine</span></div>
+        <div class="project-badge badge-live">● Live Deployed</div>
+      </div>
+
+      <p class="project-desc">
+        A fully autonomous trading engine that learns from the market rather than following rules.
+        Built with a custom Gymnasium environment, Sharpe-normalized reward shaping, and an ADX
+        regime filter — the agent sees TREND vs CHOP every candle and adapts through learned
+        behavior, not hard-coded logic. 5M training steps across 8 parallel environments.
+      </p>
+
+      <div class="metrics-row">
+        <div class="metric">
+          <span class="metric-value">63.6%</span>
+          <span class="metric-label">Win Rate</span>
+        </div>
+        <div class="metric">
+          <span class="metric-value">+6.33%</span>
+          <span class="metric-label">Holdout Return</span>
+        </div>
+        <div class="metric">
+          <span class="metric-value">+1.02%</span>
+          <span class="metric-label">Avg Trade PnL</span>
+        </div>
+        <div class="metric">
+          <span class="metric-value">8.83%</span>
+          <span class="metric-label">Max Drawdown</span>
+        </div>
+      </div>
+
+      <div class="arch-visual">
+        <span class="t-green">LIVE DATA</span> → Deriv WebSocket → M15 Candles → Feature Pipeline<br>
+        <span class="t-green">FEATURES</span> → log_return | ATR-Z | RSI | EMA | momentum | vol | ADX<br>
+        <span class="t-green">BRAIN   </span> → PPO [256,256] | 11D obs | 5 actions | Sharpe reward<br>
+        <span class="t-green">RISK    </span> → 2% stop-loss | 25% kill switch | drawdown penalty<br>
+        <span class="t-green">OUTPUT  </span> → Telegram alerts | shadow_log.csv | live balance
+      </div>
+
+      <div class="tech-stack">
+        <span class="tech-tag">Python</span>
+        <span class="tech-tag">Stable-Baselines3</span>
+        <span class="tech-tag">PPO</span>
+        <span class="tech-tag">Gymnasium</span>
+        <span class="tech-tag">NumPy</span>
+        <span class="tech-tag">WebSocket</span>
+        <span class="tech-tag">Telegram API</span>
+        <span class="tech-tag">Deriv API</span>
+      </div>
+
+      <div style="margin-top:24px;">
+        <a href="https://github.com/KwabenaBellz/EKG-Empire" target="_blank" class="btn-primary" style="display:inline-block;">View on GitHub ↗</a>
+      </div>
+    </div>
+
+    <!-- ML Ensemble -->
+    <div class="project-card reveal">
+      <div class="project-header">
+        <div class="project-title">ML Ensemble<br><span style="color:var(--muted);font-size:1rem;font-weight:400;">High-Performance Stacking Framework</span></div>
+        <div class="project-badge badge-dev">In Development</div>
+      </div>
+
+      <p class="project-desc">
+        A production-ready stacking ensemble combining three fundamentally different learning
+        algorithms — Random Forest (bagging), XGBoost (boosting), and SVM (margin-based) —
+        into a single meta-model that consistently outperforms any individual model.
+        5-fold stratified cross-validation with no data leakage.
+      </p>
+
+      <div class="metrics-row">
+        <div class="metric">
+          <span class="metric-value">99.5%+</span>
+          <span class="metric-label">ROC-AUC</span>
+        </div>
+        <div class="metric">
+          <span class="metric-value">3</span>
+          <span class="metric-label">Base Learners</span>
+        </div>
+        <div class="metric">
+          <span class="metric-value">5-Fold</span>
+          <span class="metric-label">Stratified CV</span>
+        </div>
+      </div>
+
+      <div class="tech-stack">
+        <span class="tech-tag">Scikit-learn</span>
+        <span class="tech-tag">XGBoost</span>
+        <span class="tech-tag">Random Forest</span>
+        <span class="tech-tag">SVM</span>
+        <span class="tech-tag">Pandas</span>
+        <span class="tech-tag">Matplotlib</span>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ROADMAP -->
+<section id="roadmap">
+  <div class="section-header reveal">
+    <div class="section-eyebrow">// 03 — Roadmap</div>
+    <h2 class="section-title">Where The<br>Empire Goes Next</h2>
+  </div>
+
+  <div class="roadmap">
+    <div class="roadmap-item reveal">
+      <div class="roadmap-icon">✅</div>
+      <div class="roadmap-text">
+        <strong>V75 Live Shadow</strong>
+        Deployed and running. 63.6% win rate on holdout. Telegram alerts active.
+      </div>
+    </div>
+    <div class="roadmap-item reveal">
+      <div class="roadmap-icon">✅</div>
+      <div class="roadmap-text">
+        <strong>ADX Regime Detection</strong>
+        Agent observes TREND vs CHOP every candle. Learned response, not rules.
+      </div>
+    </div>
+    <div class="roadmap-item reveal">
+      <div class="roadmap-icon">🔨</div>
+      <div class="roadmap-text">
+        <strong>BTC/USDT Pipeline</strong>
+        Binance API integration. 96 candles/day, 24/7. Real market, real flow.
+      </div>
+    </div>
+    <div class="roadmap-item reveal">
+      <div class="roadmap-icon">📐</div>
+      <div class="roadmap-text">
+        <strong>Gold (XAUUSD)</strong>
+        Strongest trending instrument. Same engine, new instrument.
+      </div>
+    </div>
+    <div class="roadmap-item reveal">
+      <div class="roadmap-icon">🎯</div>
+      <div class="roadmap-text">
+        <strong>Portfolio Risk Allocator</strong>
+        Multi-instrument capital allocation. Dynamic sizing based on agent performance.
+      </div>
+    </div>
+    <div class="roadmap-item reveal">
+      <div class="roadmap-icon">🚀</div>
+      <div class="roadmap-text">
+        <strong>Live Execution</strong>
+        Demo account → Prop firm challenge → Real capital deployment.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact">
+  <div class="section-header reveal">
+    <div class="section-eyebrow">// 04 — Contact</div>
+    <h2 class="section-title">Build Something<br>Together</h2>
+  </div>
+
+  <div class="contact-grid">
+    <div class="contact-text reveal">
+      <p>
+        If you're working at the intersection of AI and finance,
+        building systematic trading infrastructure, or looking for
+        someone who can own a complex technical problem end to end —
+        let's talk.
+      </p>
+      <p>
+        Open to: ML Engineering roles, Quant Developer positions,
+        Fintech consulting, and collaborative research.
+      </p>
+      <p>
+        Currently: Lagos, Nigeria.<br>
+        Relocating to: Canada 🇨🇦 — 2026.
+      </p>
+      <div class="contact-links">
+        <a href="https://github.com/KwabenaBellz" target="_blank" class="contact-link">
+          <span class="contact-link-icon">⌥</span>
+          github.com/KwabenaBellz
+        </a>
+        <a href="https://linkedin.com/in/olaoluwa-emmanuel-bello" target="_blank" class="contact-link">
+          <span class="contact-link-icon">◈</span>
+          linkedin.com/in/olaoluwa-emmanuel-bello
+        </a>
+      </div>
+    </div>
+
+    <div class="quote-block reveal">
+      <div class="quote-text">
+        "The machine carries the family name. It fights every day so we don't have to."
+      </div>
+      <div class="quote-attr">— Olaoluwa Emmanuel Bello, Lagos 2026</div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <span>© 2026 <span class="footer-name">EKG Empire</span> — Emmanuel • Kwabena • Gift</span>
+  <span style="color:var(--green);">Built from scratch. Lagos → Canada.</span>
+</footer>
+
+<script>
+  // Custom cursor
+  const cursor = document.getElementById('cursor');
+  const ring = document.getElementById('cursorRing');
+  let mx = 0, my = 0, rx = 0, ry = 0;
+
+  document.addEventListener('mousemove', e => {
+    mx = e.clientX; my = e.clientY;
+    cursor.style.left = mx - 4 + 'px';
+    cursor.style.top  = my - 4 + 'px';
+  });
+
+  function animateRing() {
+    rx += (mx - rx - 16) * 0.12;
+    ry += (my - ry - 16) * 0.12;
+    ring.style.left = rx + 'px';
+    ring.style.top  = ry + 'px';
+    requestAnimationFrame(animateRing);
+  }
+  animateRing();
+
+  // Scroll reveal
+  const reveals = document.querySelectorAll('.reveal');
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach((entry, i) => {
+      if (entry.isIntersecting) {
+        setTimeout(() => entry.target.classList.add('visible'), i * 80);
+      }
+    });
+  }, { threshold: 0.1 });
+
+  reveals.forEach(el => observer.observe(el));
+
+  // Cursor hover effect
+  document.querySelectorAll('a, button, .project-card').forEach(el => {
+    el.addEventListener('mouseenter', () => {
+      cursor.style.transform = 'scale(2.5)';
+      ring.style.transform = 'scale(1.5)';
+      ring.style.opacity = '0.8';
+    });
+    el.addEventListener('mouseleave', () => {
+      cursor.style.transform = 'scale(1)';
+      ring.style.transform = 'scale(1)';
+      ring.style.opacity = '0.4';
+    });
+  });
+</script>
+</body>
+</html>
